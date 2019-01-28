@@ -221,7 +221,7 @@ impl Crypto {
         Self::new(side, digest, cipher, secrets)
     }
 
-    pub fn new_0rtt(secret: &[u8]) -> Self {
+    fn new_0rtt(secret: &[u8]) -> Self {
         Self::new(
             Side::Client, // Meaningless when the secrets are equal
             &digest::SHA256,
@@ -233,7 +233,7 @@ impl Crypto {
         )
     }
 
-    pub fn new(
+    fn new(
         side: Side,
         digest: &'static digest::Algorithm,
         cipher: &'static aead::Algorithm,
@@ -258,7 +258,7 @@ impl Crypto {
         }
     }
 
-    pub fn write_nonce(&self, iv: &[u8], number: u64, out: &mut [u8]) {
+    fn write_nonce(&self, iv: &[u8], number: u64, out: &mut [u8]) {
         let out = {
             let mut write = io::Cursor::new(out);
             write.put_u32_be(0);
