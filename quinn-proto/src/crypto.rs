@@ -27,14 +27,6 @@ pub enum TlsSession {
 }
 
 impl TlsSession {
-    pub fn as_client(&self) -> &ClientSession {
-        if let TlsSession::Client(ref session) = *self {
-            session
-        } else {
-            panic!("not a client");
-        }
-    }
-
     fn side(&self) -> Side {
         match self {
             TlsSession::Client(_) => Side::Client,
@@ -55,6 +47,13 @@ impl CryptoSession for TlsSession {
     fn early_crypto(&self) -> Option<Crypto> {
         self.get_early_secret()
             .map(|secret| Crypto::new_0rtt(secret))
+    }
+
+    fn early_data_accepted(&self) -> Option<bool> {
+        match self {
+            TlsSession::Client(session) => Some(session.is_early_data_accepted()),
+            _ => None,
+        }
     }
 
     fn is_handshaking(&self) -> bool {
@@ -109,6 +108,7 @@ pub trait CryptoSession {
     fn error_code(&self) -> Option<u8>;
     fn alpn_protocol(&self) -> Option<&[u8]>;
     fn early_crypto(&self) -> Option<Crypto>;
+    fn early_data_accepted(&self) -> Option<bool>;
     fn is_handshaking(&self) -> bool;
     fn read_handshake(&mut self, buf: &[u8]) -> Result<(), TransportError>;
     fn sni_hostname(&self) -> Option<&str>;
