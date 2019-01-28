@@ -64,8 +64,14 @@ impl CryptoSession for TlsSession {
         }
     }
 
-    fn read_handshake(&mut self, buf: &[u8]) -> Result<(), TLSError> {
-        self.read_hs(buf)
+    fn read_handshake(&mut self, buf: &[u8]) -> Result<(), TransportError> {
+        self.read_hs(buf).map_err(|_| {
+            if let Some(code) = self.error_code() {
+                TransportError::crypto(code)
+            } else {
+                TransportError::PROTOCOL_VIOLATION("TLS error")
+            }
+        })
     }
 
     fn sni_hostname(&self) -> Option<&str> {
@@ -104,7 +110,7 @@ pub trait CryptoSession {
     fn alpn_protocol(&self) -> Option<&[u8]>;
     fn early_crypto(&self) -> Option<Crypto>;
     fn is_handshaking(&self) -> bool;
-    fn read_handshake(&mut self, buf: &[u8]) -> Result<(), TLSError>;
+    fn read_handshake(&mut self, buf: &[u8]) -> Result<(), TransportError>;
     fn sni_hostname(&self) -> Option<&str>;
     fn transport_parameters(&self) -> Result<Option<TransportParameters>, TransportError>;
     fn write_handshake(&mut self, buf: &mut Vec<u8>) -> Option<Crypto>;
