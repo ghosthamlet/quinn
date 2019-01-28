@@ -10,7 +10,6 @@ use ring::aead::{self, Aad, Nonce};
 use ring::digest;
 use ring::hkdf;
 use ring::hmac::{self, SigningKey};
-use rustls::internal::msgs::enums::AlertDescription;
 use rustls::quic::{ClientQuicExt, Secrets, ServerQuicExt};
 use rustls::ProtocolVersion;
 pub use rustls::{Certificate, NoClientAuth, PrivateKey, TLSError};
@@ -45,8 +44,8 @@ impl TlsSession {
 }
 
 impl CryptoSession for TlsSession {
-    fn alert(&self) -> Option<AlertDescription> {
-        self.get_alert()
+    fn error_code(&self) -> Option<u8> {
+        self.get_alert().map(|alert| alert.get_u8())
     }
 
     fn alpn_protocol(&self) -> Option<&[u8]> {
@@ -101,7 +100,7 @@ impl CryptoSession for TlsSession {
 }
 
 pub trait CryptoSession {
-    fn alert(&self) -> Option<AlertDescription>;
+    fn error_code(&self) -> Option<u8>;
     fn alpn_protocol(&self) -> Option<&[u8]>;
     fn early_crypto(&self) -> Option<Crypto>;
     fn is_handshaking(&self) -> bool;

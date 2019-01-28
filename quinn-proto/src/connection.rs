@@ -909,8 +909,8 @@ impl Connection {
             trace!(self.log, "read {} TLS bytes", n);
             if let Err(e) = self.tls.read_handshake(&buf[..n]) {
                 debug!(self.log, "TLS error: {}", e);
-                return Err(if let Some(alert) = self.tls.alert() {
-                    TransportError::crypto(alert)
+                return Err(if let Some(code) = self.tls.error_code() {
+                    TransportError::crypto(code)
                 } else {
                     TransportError::PROTOCOL_VIOLATION("TLS error")
                 });
